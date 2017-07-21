@@ -13,6 +13,7 @@ import boto3
 import json
 from boto3.dynamodb.conditions import Key, Attr
 import random
+import os
 
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
@@ -76,7 +77,7 @@ def get_answer_response(intent, session):
 
 def get_tweet_from_dynamo(handle):
     dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('TrumpTweet', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
+    table = dynamodb.Table('TrumpTweet', aws_access_key_id=os.environ.get("ACCESS_KEY"), aws_secret_access_key=os.environ.get("SECRET_KEY"))
     
     max_num = max(table.item_count, 200)
     rand_row = random.randint(max_num)
