@@ -8,15 +8,14 @@
 from twitter import *
 import boto3
 import json
-import request
 #-----------------------------------------------------------------------
-# load our API credentials 
+# load our API credentials
 #-----------------------------------------------------------------------
 config = {}
 execfile("config.py", config)
 
 ddb = boto3.resource('dynamodb')
-table = ddb.Table('TrumpTweets')
+table = ddb.Table('TrumpTweet')
 
 #-----------------------------------------------------------------------
 # create twitter API object
@@ -39,10 +38,11 @@ results = twitter.statuses.user_timeline(screen_name = user, count = 200)
 #-----------------------------------------------------------------------
 # loop through each status item, and print its content.
 #-----------------------------------------------------------------------
-for status in results:
+
+for ind,status in enumerate(results):
 	item = {
-            'handle':status['screen_name'],
-            'uid':status['id'], 
+            'handle':status['user']['screen_name'],
+            'uid':ind,
             'name':status['user']['name'],
             'tweet':status['text']
         }
