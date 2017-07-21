@@ -161,6 +161,11 @@ def get_tweet_from_dynamo(handle):
     return response["Items"]
 
 def get_tweet():
+    #if np.random.randint(2) == 0:
+    #    handle = "realDonaldTrump"
+    #else:
+    #    handle = 
+    
     handle = "realDonaldTrump"
     response = get_tweet_from_dynamo(handle)
     return (response["name"], response["tweet"])
