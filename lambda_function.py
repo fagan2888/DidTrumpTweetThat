@@ -12,7 +12,7 @@ http://amzn.to/1LGWsLG
 import boto3
 import json
 from boto3.dynamodb.conditions import Key, Attr
-import numpy as np
+import random
 
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
@@ -79,7 +79,7 @@ def get_tweet_from_dynamo(handle):
     table = dynamodb.Table('TrumpTweet')
     
     max_num = max(table.item_count, 200)
-    rand_row = np.random.randint(max_num)
+    rand_row = random.randint(max_num)
     
     response = table.query(
     KeyConditionExpression=Key("handle").eq(handle)
