@@ -82,8 +82,8 @@ def get_tweet_from_dynamo(is_eq):
         table = dynamodb.Table('TrumpTweet')
     else:
         table = dynamodb.Table('otherTweet')
-    max_num = table.query(KeyConditionExpression=Key('id').eq(-1))
-    rand_row = random.randint(0, max_num - 1)
+    max_num = table.query(KeyConditionExpression=Key('id').eq("-1"))
+    rand_row = str(random.randint(0, max_num - 1))
     response = table.query(KeyConditionExpression=Key('id').eq(rand_row))
 
     if len(response["Items"]) == 0:
