@@ -76,7 +76,7 @@ def get_answer_response(intent, session):
 
 def get_tweet_from_dynamo(handle):
     dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('TrumpTweet')
+    table = dynamodb.Table('TrumpTweet', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     max_num = max(table.item_count, 200)
     rand_row = random.randint(max_num)
