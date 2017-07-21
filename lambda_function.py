@@ -80,7 +80,7 @@ def get_tweet_from_dynamo(handle):
     table = dynamodb.Table('TrumpTweet')
     
     max_num = max(table.item_count, 200)
-    rand_row = random.randint(max_num)
+    rand_row = random.randint(0, max_num - 1)
     
     response = table.query(
     KeyConditionExpression=Key("handle").eq(handle)
