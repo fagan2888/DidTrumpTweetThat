@@ -147,22 +147,23 @@ def get_answer_response(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         intent['name'], speech_output, reprompt_text, should_end_session))
 
-def get_tweets(handle):
+def get_tweet_from_dynamo(handle):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('TrumpTweet')
     
-    dynamodb = boto3.resource('dynamodb', region_name='us-west-2', aws_access_key_id=
-    "AKIAIXOOZ6E7QPX45I3A", aws_secret_access_key="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")
-    table = dynamodb.Table('TrumpTweets')
-    
-    rand_row = np.randInt(table.item_count)
+    max_num = max(table.item_count, 200)
+    rand_row = np.random.randint(max_num)
     
     response = table.query(
-    KeyConditionExpression=Key("handle").eq("RealDonaldTrump")
+    KeyConditionExpression=Key("handle").eq(handle)
     & Key('uid').eq(rand_row)
 )
     return response["Items"]
 
 def get_tweet():
-    return ('Donald Trump', 'fake news')
+    handle = "realDonaldTrump"
+    response = get_tweet_from_dynamo(handle)
+    return (response["name"], response["tweet"])
 
 def get_tweet_response(intent, session):
     tweet = get_tweet()
