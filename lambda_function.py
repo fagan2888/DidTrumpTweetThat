@@ -12,14 +12,14 @@ http://amzn.to/1LGWsLG
 import boto3
 import json
 from boto3.dynamodb.conditions import Key, Attr
-import numpy as np
+import random
 
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
     return {
         'outputSpeech': {
-            'type': 'PlainText',
-            'text': output
+            'type': 'SSML',
+            'ssml': output
         },
         'card': {
             'type': 'Simple',
@@ -46,86 +46,14 @@ def build_response(session_attributes, speechlet_response):
 
 # --------------- Functions that control the skill's behavior ------------------
 
-def get_welcome_response():
-    """ If we wanted to initialize the session to have some attributes we could
-    add those here
-    """
-
-    session_attributes = {}
-    card_title = "Welcome"
-    speech_output = "Welcome to the Alexa Skills Kit sample. " \
-                    "Please tell me your favorite color by saying, " \
-                    "my favorite color is red"
-    # If the user either does not reply to the welcome message or says something
-    # that is not understood, they will be prompted again with this text.
-    reprompt_text = "Please tell me your favorite color by saying, " \
-                    "my favorite color is red."
-    should_end_session = False
-    return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
-
-
 def handle_session_end_request():
     card_title = "Session Ended"
-    speech_output = "Thank you for trying the Alexa Skills Kit sample. " \
+    speech_output = "Thank you for playing Did Trump Tweet That" \
                     "Have a nice day! "
     # Setting this to true ends the session and exits the skill.
     should_end_session = True
     return build_response({}, build_speechlet_response(
         card_title, speech_output, None, should_end_session))
-
-
-def create_favorite_color_attributes(favorite_color):
-    return {"favoriteColor": favorite_color}
-
-
-def set_color_in_session(intent, session):
-    """ Sets the color in the session and prepares the speech to reply to the
-    user.
-    """
-
-    card_title = intent['name']
-    session_attributes = {}
-    should_end_session = False
-
-    if 'Color' in intent['slots']:
-        favorite_color = intent['slots']['Color']['value']
-        session_attributes = create_favorite_color_attributes(favorite_color)
-        speech_output = "I now know your favorite color is " + \
-                        favorite_color + \
-                        ". You can ask me your favorite color by saying, " \
-                        "what's my favorite color?"
-        reprompt_text = "You can ask me your favorite color by saying, " \
-                        "what's my favorite color?"
-    else:
-        speech_output = "I'm not sure what your favorite color is. " \
-                        "Please try again."
-        reprompt_text = "I'm not sure what your favorite color is. " \
-                        "You can tell me your favorite color by saying, " \
-                        "my favorite color is red."
-    return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
-
-
-def get_color_from_session(intent, session):
-    session_attributes = {}
-    reprompt_text = None
-
-    if session.get('attributes', {}) and "favoriteColor" in session.get('attributes', {}):
-        favorite_color = session['attributes']['favoriteColor']
-        speech_output = "Your favorite color is " + favorite_color + \
-                        ". Goodbye."
-        should_end_session = True
-    else:
-        speech_output = "I'm not sure what your favorite color is. " \
-                        "You can say, my favorite color is red."
-        should_end_session = False
-
-    # Setting reprompt_text to None signifies that we do not want to reprompt
-    # the user. If the user does not respond or says something that is not
-    # understood, the session will end.
-    return build_response(session_attributes, build_speechlet_response(
-        intent['name'], speech_output, reprompt_text, should_end_session))
 
 def get_answer_response(intent, session):
     session_attributes = {}
@@ -133,17 +61,16 @@ def get_answer_response(intent, session):
 
     if session.get('attributes', {}) and "correctAnswer" in session.get('attributes', {}):
         correct_answer = session['attributes']['correctAnswer']
-        speech_output = "Y is " + correct_answer + \
-                        ". Goodbye."
+        if correct_answer == "Donald J. Trump":
+            speech_output = "Donald Trump did tweet that."
+        else:
+            speech_output = "No, " + correct_answer + " tweeted that."
+        
         should_end_session = True
     else:
-        speech_output = "I'm not sure what your favorite color is. " \
-                        "You can say, my favorite color is red."
-        should_end_session = False
-
-    # Setting reprompt_text to None signifies that we do not want to reprompt
-    # the user. If the user does not respond or says something that is not
-    # understood, the session will end.
+        speech_output = "I don't know what the answer is."
+        should_end_session = True
+        
     return build_response(session_attributes, build_speechlet_response(
         intent['name'], speech_output, reprompt_text, should_end_session))
 
@@ -152,7 +79,7 @@ def get_tweet_from_dynamo(handle):
     table = dynamodb.Table('TrumpTweet')
     
     max_num = max(table.item_count, 200)
-    rand_row = np.random.randint(max_num)
+    rand_row = random.randint(max_num)
     
     response = table.query(
     KeyConditionExpression=Key("handle").eq(handle)
@@ -172,10 +99,12 @@ def get_tweet():
 
 def get_tweet_response(intent, session):
     tweet = get_tweet()
-    session_attributes = {}
+    session_attributes = {
+        "correctAnswer": tweet[0]
+    }
     card_title = "Tweet"
-    speech_output = tweet[1]
-    reprompt_text = tweet[0]
+    speech_output = '<speak>Did Donald Trump tweet this: <break time="1s"/>' + tweet[1] + '</speak>'
+    reprompt_text = '<speak>Did Donald Trump tweet this: <break time="1s"/>' + tweet[1] + '</speak>'
     should_end_session = False
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
@@ -197,7 +126,7 @@ def on_launch(launch_request, session):
     print("on_launch requestId=" + launch_request['requestId'] +
           ", sessionId=" + session['sessionId'])
     # Dispatch to your skill's launch
-    return get_welcome_response()
+    return get_tweet_response(None, session)
 
 
 def on_intent(intent_request, session):
@@ -215,7 +144,7 @@ def on_intent(intent_request, session):
     elif intent_name == "GetAnswerIntent":
         return get_answer_response(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
-        return get_welcome_response()
+        return get_tweet_response(intent, session)
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
         return handle_session_end_request()
     else:
