@@ -1,0 +1,8 @@
+GetTweetIntent get tweet
+GetTweetIntent get trump tweet
+GetTweetIntent play trump tweet
+GetTweetIntent play
+GetAnswerIntent get answer
+GetAnswerIntent yes
+GetAnswerIntent no
+GetAnswerIntent I don't know

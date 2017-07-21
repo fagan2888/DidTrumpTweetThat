@@ -1,0 +1,13 @@
+{
+  "intents": [
+    {
+      "intent": "GetTweetIntent"
+    },
+    {
+      "intent": "GetAnswerIntent"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    }
+  ]
+}
