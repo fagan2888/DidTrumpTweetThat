@@ -75,29 +75,28 @@ def get_answer_response(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         intent['name'], speech_output, reprompt_text, should_end_session))
 
-def get_tweet_from_dynamo(handle):
+def get_tweet_from_dynamo(is_eq):
     dynamodb = boto3.resource('dynamodb', aws_access_key_id=os.environ.get("ACCESS_KEY"), aws_secret_access_key=os.environ.get("SECRET_KEY"))
-    table = dynamodb.Table('TrumpTweet')
-    
-    max_num = max(table.item_count, 20)
+        
+    if is_eq:
+        table = dynamodb.Table('TrumpTweet')
+    else:
+        table = dynamodb.Table('otherTweet')
+    max_num = table.query(KeyConditionExpression=Key('id').eq(-1))
     rand_row = random.randint(0, max_num - 1)
-    
-    response = table.query(
-    KeyConditionExpression=Key("handle").eq(handle)
-    & Key('uid').eq(rand_row)
-)
+    response = table.query(KeyConditionExpression=Key('id').eq(rand_row))
+
     if len(response["Items"]) == 0:
         return None
     return response["Items"][0]
 
 def get_tweet():
-    #if np.random.randint(2) == 0:
-    #    handle = "realDonaldTrump"
-    #else:
-    #    handle = 
+    if random.randint(0, 1) == 0:
+        is_eq = True
+    else:
+        is_eq = False 
     
-    handle = "realDonaldTrump"
-    response = get_tweet_from_dynamo(handle)
+    response = get_tweet_from_dynamo(is_eq)
     if response == None:
         return ("NA", "NA")
     return (response["name"], response["tweet"])
