@@ -86,7 +86,7 @@ def get_tweet_from_dynamo(handle):
     KeyConditionExpression=Key("handle").eq(handle)
     & Key('uid').eq(rand_row)
 )
-    return response["Items"]
+    return response["Items"][0]
 
 def get_tweet():
     #if np.random.randint(2) == 0:
