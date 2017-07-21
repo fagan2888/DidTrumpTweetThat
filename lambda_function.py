@@ -79,13 +79,15 @@ def get_tweet_from_dynamo(handle):
     dynamodb = boto3.resource('dynamodb', aws_access_key_id=os.environ.get("ACCESS_KEY"), aws_secret_access_key=os.environ.get("SECRET_KEY"))
     table = dynamodb.Table('TrumpTweet')
     
-    max_num = max(table.item_count, 200)
+    max_num = max(table.item_count, 20)
     rand_row = random.randint(0, max_num - 1)
     
     response = table.query(
     KeyConditionExpression=Key("handle").eq(handle)
     & Key('uid').eq(rand_row)
 )
+    if len(response["Items"]) == 0:
+        return None
     return response["Items"][0]
 
 def get_tweet():
@@ -96,6 +98,8 @@ def get_tweet():
     
     handle = "realDonaldTrump"
     response = get_tweet_from_dynamo(handle)
+    if response == None:
+        return ("NA", "NA")
     return (response["name"], response["tweet"])
 
 def get_tweet_response(intent, session):
